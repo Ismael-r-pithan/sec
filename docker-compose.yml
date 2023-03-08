@@ -1,0 +1,44 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres
+    restart: always
+    container_name: postgres
+    ports:
+    - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=api
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - bridge
+  backend:
+    build: ./api
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/api
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    networks:
+      - bridge
+  frontend:
+    build: ./app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - bridge
+
+volumes:
+  db-data:
+
+networks:
+  bridge:
